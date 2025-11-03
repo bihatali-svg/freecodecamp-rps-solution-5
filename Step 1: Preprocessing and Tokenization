@@ -1,0 +1,38 @@
+import tensorflow as tf
+from tensorflow.keras.preprocessing.text import Tokenizer
+from tensorflow.keras.preprocessing.sequence import pad_sequences
+import numpy as np
+import re
+
+# --- Data Preparation ---
+# Assuming 'train_df' and 'test_df' are loaded DataFrames with 'text' and 'label' columns
+
+# Convert 'ham'/'spam' labels to 0/1 (0 for ham, 1 for spam)
+train_labels = train_df['label'].apply(lambda x: 1 if x == 'spam' else 0).values
+test_labels = test_df['label'].apply(lambda x: 1 if x == 'spam' else 0).values
+
+# Clean the text (optional but recommended for better accuracy)
+def clean_text(text):
+    text = text.lower()
+    text = re.sub(r'[^a-z0-9\s]', '', text) # Remove punctuation
+    return text
+
+train_messages = train_df['text'].apply(clean_text).tolist()
+test_messages = test_df['text'].apply(clean_text).tolist()
+
+# --- Tokenization and Sequencing ---
+VOCAB_SIZE = 10000 # Max number of words to keep
+MAX_LEN = 150      # Max length of sequences (SMS are short)
+EMBEDDING_DIM = 16 # Dimensionality of the word embedding
+
+# Initialize and fit the tokenizer on the training data only
+tokenizer = Tokenizer(num_words=VOCAB_SIZE, oov_token="<unk>")
+tokenizer.fit_on_texts(train_messages)
+
+# Convert texts to sequences of integers
+train_sequences = tokenizer.texts_to_sequences(train_messages)
+test_sequences = tokenizer.texts_to_sequences(test_messages)
+
+# Pad sequences to ensure uniform length
+train_padded = pad_sequences(train_sequences, maxlen=MAX_LEN, padding='post', truncating='post')
+test_padded = pad_sequences(test_sequences, maxlen=MAX_LEN, padding='post', truncating='post')
