@@ -1,0 +1,42 @@
+def predict_message(message):
+    """
+    Takes a message string, predicts if it's 'ham' or 'spam', and returns 
+    the probability and the corresponding label.
+    """
+    
+    # 1. Preprocess the message
+    cleaned_message = clean_text(message)
+    
+    # 2. Tokenize and convert to sequence using the trained tokenizer
+    sequence = tokenizer.texts_to_sequences([cleaned_message])
+    
+    # 3. Pad the sequence
+    padded_sequence = pad_sequences(sequence, maxlen=MAX_LEN, padding='post', truncating='post')
+    
+    # 4. Predict the probability (output is a single value between 0 and 1)
+    # The output is the likelihood of 'spam' (1)
+    prediction = model.predict(padded_sequence)[0][0]
+    
+    # 5. Determine the label
+    # Threshold is typically 0.5. If prediction > 0.5, it's spam.
+    if prediction > 0.5:
+        # The first element is the probability of 'spam' (1)
+        probability_of_spam = prediction
+        label = "spam"
+    else:
+        # The first element must be the likelihood of 'ham' (0)
+        # Likelihood of ham = 1 - likelihood of spam
+        probability_of_spam = 1.0 - prediction
+        label = "ham"
+
+    # NOTE: The instructions state: "The first element in the list should be a number
+    # between zero and one that indicates the likeliness of 'ham' (0) or 'spam' (1)."
+    # We will return the probability corresponding to the chosen label for clarity.
+    
+    # To strictly follow the output format of [likeliness_of_spam_or_ham, "ham" or "spam"]:
+    if label == "spam":
+        # Returns [Probability of Spam, 'spam']
+        return [probability_of_spam, label]
+    else:
+        # Returns [Probability of Ham, 'ham']
+        return [1.0 - probability_of_spam, label]
